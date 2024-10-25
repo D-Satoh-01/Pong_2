@@ -1,3 +1,15 @@
+var randomized_number_1 = 0;
+var randomized_number_2 = 0;
+var counter_1 = 0;
+var counter_2 = 0;
+var counter_3 = 0;
+var setBallVelDefault;
+var score_player = 0;
+var score_cpu = 0;
+var level = 1;
+var flag_run = false;
+var game_over = false;
+
 class Vector {
     constructor(x = 0, y = 0){
         this.x = x;
@@ -24,6 +36,12 @@ class Rect {
     get bottom(){
         return this.position.y + this.size.y;
     }
+    get center_x(){
+        return this.position.x - this.size.x / 2;
+    }
+    get center_y(){
+        return this.position.y - this.size.y / 2;
+    }
 }
 
 class Ball extends Rect { //extendsでクラスの継承
@@ -47,11 +65,11 @@ class Game {
 
         //Ballのインスタンス化
         this.balls = new Ball;
-        this.balls.position.x = 100;
+        this.balls.position.x = 300;
         this.balls.position.y = 50;
-
-        this.balls.velocity.x = 150;
-        this.balls.velocity.y = 150;
+        
+        this.balls.velocity.x = 0;
+        this.balls.velocity.y = 0;
 
         //プレイヤークラスのインスタンスの生成
         this.players = [
@@ -77,12 +95,14 @@ class Game {
         this.players[5].position.x = canvas.width - 40;
         this.players[5].position.y = canvas.height/2 + 30;
 
-        this.player_speed = 3
-        this.ai_speed = 2
+        this.player_speed = 1
+        this.cpu_speed = 0.5
+        this.ball_speed_increment_paddle_x = 20;
+        this.ball_speed_increment_paddle_y = 50;
         this.player_move_flag_up = false;
         this.player_move_flag_down = false;
-
-        this.player_move_input();
+        this.flag_run = false;
+        this.game_over = false;
 
         let lastTime;
 
@@ -96,24 +116,40 @@ class Game {
     callback();
     }
 
+    randomize_1(){
+        randomized_number_1 = Math.round(Math.random());
+    }
+
     collide(){
-        if(this.players[0].top < this.balls.bottom && this.players[0].right > this.balls.left && this.players[0].bottom > this.balls.top && this.players[0].left < this.balls.right || this.players[3].top < this.balls.bottom && this.players[3].left < this.balls.right && this.players[3].bottom > this.balls.top){
+        if(this.players[0].top < this.balls.bottom && this.players[0].right > this.balls.left && this.players[0].bottom > this.balls.top && this.players[0].left < this.balls.right
+             || this.players[3].top < this.balls.bottom && this.players[3].left < this.balls.right && this.players[3].bottom > this.balls.top){
             this.balls.velocity.x = -this.balls.velocity.x;
-            this.balls.velocity.y -= this.balls.velocity.y * 0.9 + 50;
+            this.balls.velocity.y -= this.balls.velocity.y * 0.9 + this.ball_speed_increment_paddle_y;
         }
 
         if(this.players[1].top < this.balls.bottom && this.players[1].right > this.balls.left && this.players[1].bottom > this.balls.top && this.players[1].left < this.balls.right){
-            this.balls.velocity.x = - this.balls.velocity.x;
+            if (this.balls.velocity.x < 0){
+                this.balls.velocity.x = - this.balls.velocity.x + 20;
+            }
+            else{
+                this.balls.velocity.x = - this.balls.velocity.x - 20;
+            }
         }
         if(this.players[4].top < this.balls.bottom && this.players[4].right > this.balls.left && this.players[4].bottom > this.balls.top && this.players[4].left < this.balls.right){
-            this.balls.velocity.x = - this.balls.velocity.x;
+            if (this.balls.velocity.x < 0){
+                this.balls.velocity.x = - this.balls.velocity.x + 20;
+            }
+            else{
+                this.balls.velocity.x = - this.balls.velocity.x - 20;
+            }
         }
-
-        if(this.players[2].top < this.balls.bottom && this.players[2].right > this.balls.left && this.players[2].bottom > this.balls.top  && this.players[2].left < this.balls.right || this.players[5].top < this.balls.bottom && this.players[5].left < this.balls.right && this.players[5].bottom > this.balls.top){
+        if(this.players[2].top < this.balls.bottom && this.players[2].right > this.balls.left && this.players[2].bottom > this.balls.top  && this.players[2].left < this.balls.right
+             || this.players[5].top < this.balls.bottom && this.players[5].left < this.balls.right && this.players[5].bottom > this.balls.top){
             this.balls.velocity.x = -this.balls.velocity.x;
-            this.balls.velocity.y += this.balls.velocity.y * 0.9 + 50;
+            this.balls.velocity.y += this.balls.velocity.y * 0.9 + this.ball_speed_increment_paddle_y;
         }
     }
+    
 
     draw(){
         this._context.fillStyle = "#222222";
@@ -138,6 +174,13 @@ class Game {
             if (inputtedValue.keyCode == 40){
                 this.player_move_flag_down = true
             }
+
+            if (inputtedValue.keyCode == 37){
+                this.player_move_flag_left = true
+            }
+            if (inputtedValue.keyCode == 39){
+                this.player_move_flag_right = true
+            }
         }
 
         window.onkeyup = (inputtedValue) => {
@@ -148,21 +191,40 @@ class Game {
             if (inputtedValue.keyCode == 40){
                 this.player_move_flag_down = false
             }
+
+            if (inputtedValue.keyCode == 37){
+                this.player_move_flag_left = false
+            }
+            if (inputtedValue.keyCode == 39){
+                this.player_move_flag_right = false
+            }
         }
     }
 
     player_move(){
-        if (this.player_move_flag_down == true){
-            this.players[0].position.y += this.player_speed;
-            this.players[1].position.y += this.player_speed;
-            this.players[2].position.y += this.player_speed;
+        if (!(this.players[0].top - 10 <= this.balls.bottom && this.players[2].bottom + 10 >= this.balls.top
+            && this.players[1].left- 10 <= this.balls.right && this.players[1].right + 10 >= this.balls.left)){
+            if (this.player_move_flag_down == true){
+                this.players[0].position.y += this.player_speed;
+                this.players[1].position.y += this.player_speed;
+                this.players[2].position.y += this.player_speed;
+            }
+            if (this.player_move_flag_up == true){
+                this.players[0].position.y -= this.player_speed;
+                this.players[1].position.y -= this.player_speed;
+                this.players[2].position.y -= this.player_speed;
+            }
+            if (this.player_move_flag_left == true){
+                this.players[0].position.x -= this.player_speed;
+                this.players[1].position.x -= this.player_speed;
+                this.players[2].position.x -= this.player_speed;
+            }
+            if (this.player_move_flag_right == true){
+                this.players[0].position.x += this.player_speed;
+                this.players[1].position.x += this.player_speed;
+                this.players[2].position.x += this.player_speed;
+            }
         }
-        if (this.player_move_flag_up == true){
-            this.players[0].position.y -= this.player_speed;
-            this.players[1].position.y -= this.player_speed;
-            this.players[2].position.y -= this.player_speed;
-        }
-
         //プレイヤーの壁への当たり判定
         if (this.players[0].top <= 0){
             this.players[0].position.y = 0;
@@ -173,6 +235,139 @@ class Game {
             this.players[0].position.y = canvas.height - 90;
             this.players[1].position.y = canvas.height - 60;
             this.players[2].position.y = canvas.height - 30;
+        }
+        if (this.players[1].left < 20){
+            this.players[0].position.x = 25;
+            this.players[1].position.x = 25;
+            this.players[2].position.x = 25;
+        }
+        if (this.players[1].right >= 250){
+            this.players[0].position.x = 235;
+            this.players[1].position.x = 235;
+            this.players[2].position.x = 235;
+        }
+    }
+
+    setBallVelDefault(){
+        if (level == 1){
+            if(randomized_number_1 == 0){
+                this.balls.velocity.x = -100;
+            }
+            else{
+                this.balls.velocity.x = 100;
+            }
+            this.balls.velocity.y = 100;
+        }
+        if (level == 2){
+            if(randomized_number_1 == 0){
+                this.balls.velocity.x = -150;
+            }
+            else{
+                this.balls.velocity.x = 150;
+            }
+            this.balls.velocity.y = 150;
+        }
+        if (level == 3){
+            if(randomized_number_1 == 0){
+                this.balls.velocity.x = -200;
+            }
+            else{
+                this.balls.velocity.x = 200;
+            }
+            this.balls.velocity.y = 200;
+        }
+        if (level == 4){
+            if(randomized_number_1 == 0){
+                this.balls.velocity.x = -250;
+            }
+            else{
+                this.balls.velocity.x = 250;
+            }
+            this.balls.velocity.y = 250;
+        }
+        if (level >= 5){
+            if(randomized_number_1 == 0){
+                this.balls.velocity.x = -300;
+            }
+            else{
+                this.balls.velocity.x = 300;
+            }
+            this.balls.velocity.y = 300;
+        }
+    }
+
+    reset_ball(){
+        counter_3 += 1;
+        
+        this.balls.position.x = 300;
+        this.balls.position.y = 50;
+        this.balls.velocity.x = 0;
+        this.balls.velocity.y = 0;
+        if(counter_3 >= 140*1){
+            this.setBallVelDefault();
+            counter_3 = 0;
+        }
+
+    }
+
+    return_ball(){
+        if(this.balls.position.x < -10 || this.balls.position.x > 600 || this.balls.position.y < -10 || this.balls.position.y > 400){
+            this.reset_ball();
+        }
+        if(this.balls.velocity.x > 1000 || this.balls.velocity.y > 1000){
+            this.reset_ball();
+        }
+        if(this.balls.velocity.x < 50 || this.balls.velocity.y < 50 || this.balls.position.y < 50 || this.balls.position.y > canvas.height - 50){
+            counter_2 += 1;
+            
+            if(this.balls.velocity.x > 20 || this.balls.velocity.y > 20){
+                counter_2 = 0;
+            }
+            if(counter_2 >= 140*3){ //140で大体1秒
+                this.reset_ball();
+            }
+        }
+    }
+
+    timer_ai_move_x(){
+        counter_1 += 1;
+        if(counter_1 == 140*1){ //140で大体1秒
+            counter_1 = 0;
+            randomized_number_2 = Math.round(Math.random()*10);
+        }
+    }
+
+    game_manager(){
+        this._context.font = "36px monospace";
+        this._context.fillStyle = "#ffffff";
+        this._context.fillText(score_player, canvas.width/10*2, canvas.height/10*2);
+        this._context.fillText(score_cpu, canvas.width/10*8, canvas.height/10*2);
+        this._context.fillText("LEVEL: " + level, canvas.width/10*4, canvas.height/10*9);
+
+        if(this.balls.right >= 590){
+            score_player += 1;
+            this.reset_ball();
+            if(score_player ==3){
+                level += 1;
+                score_player = 0;
+                score_cpu = 0;
+                this.cpu_speed += 0.2;
+                this.ball_speed_increment_paddle_x += 20;
+                this.reset_ball();
+            }
+        }
+        
+        if(this.balls.left <= 10){
+            score_cpu += 1;
+            this.reset_ball();
+            if(score_cpu == 3){
+                this.game_over = true;
+                score_player = 0;
+                score_cpu = 0;
+                level = 1;
+                this._context.fillText("Game Over", canvas.width/10*4, canvas.height/10*5);
+                this.flag_run = false;
+            }
         }
     }
 
@@ -189,15 +384,34 @@ class Game {
         }
 
         //AIの挙動
-        if (this.players[4].position.y < this.balls.position.y){
-            this.players[3].position.y += this.ai_speed;
-            this.players[4].position.y += this.ai_speed;
-            this.players[5].position.y += this.ai_speed;
-        }
-        if (this.players[4].position.y > this.balls.position.y){
-            this.players[3].position.y -= this.ai_speed;
-            this.players[4].position.y -= this.ai_speed;
-            this.players[5].position.y -= this.ai_speed;
+        if(!(this.players[3].top - 10 <= this.balls.bottom && this.players[5].bottom + 10 >= this.balls.top
+            && this.players[4].left- 10 <= this.balls.right && this.players[4].right + 10 >= this.balls.left)){
+            if(this.players[4].position.y < this.balls.position.y){
+                this.players[3].position.y += this.cpu_speed;
+                this.players[4].position.y += this.cpu_speed;
+                this.players[5].position.y += this.cpu_speed;
+            }
+            if(this.players[4].position.y > this.balls.position.y){
+                this.players[3].position.y -= this.cpu_speed;
+                this.players[4].position.y -= this.cpu_speed;
+                this.players[5].position.y -= this.cpu_speed;
+            }
+
+            if(randomized_number_2 <= 3){
+                this.players[3].position.x += this.cpu_speed;
+                this.players[4].position.x += this.cpu_speed;
+                this.players[5].position.x += this.cpu_speed;
+            }
+            if(randomized_number_2 >= 4 && randomized_number_2 <= 6){
+                this.players[3].position.x = this.players[3].position.x;
+                this.players[4].position.x = this.players[3].position.x;
+                this.players[5].position.x = this.players[3].position.x;
+            }
+            if(randomized_number_2 >= 7){
+                this.players[3].position.x -= this.cpu_speed;
+                this.players[4].position.x -= this.cpu_speed;
+                this.players[5].position.x -= this.cpu_speed;
+            }
         }
         
         //AIの壁への当たり判定
@@ -211,12 +425,25 @@ class Game {
             this.players[4].position.y = canvas.height - 60;
             this.players[5].position.y = canvas.height - 30;
         }
+        if (this.players[4].right > canvas.width -20){
+            this.players[3].position.x = canvas.width - 30;
+            this.players[4].position.x = canvas.width - 30;
+            this.players[5].position.x = canvas.width - 30;
+        }
+        if (this.players[4].left <= 350){
+            this.players[3].position.x = 350;
+            this.players[4].position.x = 350;
+            this.players[5].position.x = 350;
+        }
         
+        this.randomize_1();
         this.collide();
-
         this.draw();
+        this.player_move_input();
         this.player_move();
-        
+        this.return_ball();
+        this.timer_ai_move_x();
+        this.game_manager();
     }
 }
 
