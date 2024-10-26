@@ -37,10 +37,10 @@ class Rect {
         return this.position.y + this.size.y;
     }
     get center_x(){
-        return this.position.x - this.size.x / 2;
+        return this.position.x + this.size.x / 2;
     }
     get center_y(){
-        return this.position.y - this.size.y / 2;
+        return this.position.y + this.size.y / 2;
     }
 }
 
@@ -98,7 +98,7 @@ class Game {
         this.player_speed = 1
         this.cpu_speed = 0.5
         this.ball_speed_increment_paddle_x = 20;
-        this.ball_speed_increment_paddle_y = 50;
+        this.ball_speed_increment_paddle_y = 5;
         this.player_move_flag_up = false;
         this.player_move_flag_down = false;
         this.flag_run = false;
@@ -121,32 +121,31 @@ class Game {
     }
 
     collide(){
-        if(this.players[0].top < this.balls.bottom && this.players[0].right > this.balls.left && this.players[0].bottom > this.balls.top && this.players[0].left < this.balls.right
-             || this.players[3].top < this.balls.bottom && this.players[3].left < this.balls.right && this.players[3].bottom > this.balls.top){
-            this.balls.velocity.x = -this.balls.velocity.x;
-            this.balls.velocity.y -= this.balls.velocity.y * 0.9 + this.ball_speed_increment_paddle_y;
+        if (this.players[0].left < this.balls.right && this.players[0].right > this.balls.left && this.players[0].top < this.balls.bottom && this.players[0].bottom > this.balls.top){
+            this.balls.velocity.x = -(this.balls.velocity.x) + this.ball_speed_increment_paddle_x;
+            this.balls.velocity.y += -Math.abs(this.balls.velocity.y) * 0.1 - this.ball_speed_increment_paddle_y;
+        }
+        if (this.players[3].left < this.balls.right && this.players[3].right > this.balls.left && this.players[3].top < this.balls.bottom && this.players[3].bottom > this.balls.top){
+            this.balls.velocity.x = -(this.balls.velocity.x) + this.ball_speed_increment_paddle_x;
+            this.balls.velocity.y += -Math.abs(this.balls.velocity.y) * 0.1 - this.ball_speed_increment_paddle_y;
         }
 
-        if(this.players[1].top < this.balls.bottom && this.players[1].right > this.balls.left && this.players[1].bottom > this.balls.top && this.players[1].left < this.balls.right){
-            if (this.balls.velocity.x < 0){
-                this.balls.velocity.x = - this.balls.velocity.x + 20;
-            }
-            else{
-                this.balls.velocity.x = - this.balls.velocity.x - 20;
-            }
+
+        if (this.players[1].left < this.balls.right && this.players[1].right > this.balls.left && this.players[1].top < this.balls.bottom && this.players[1].bottom > this.balls.top){
+            this.balls.velocity.x = -(this.balls.velocity.x) + this.ball_speed_increment_paddle_x;
         }
-        if(this.players[4].top < this.balls.bottom && this.players[4].right > this.balls.left && this.players[4].bottom > this.balls.top && this.players[4].left < this.balls.right){
-            if (this.balls.velocity.x < 0){
-                this.balls.velocity.x = - this.balls.velocity.x + 20;
-            }
-            else{
-                this.balls.velocity.x = - this.balls.velocity.x - 20;
-            }
+        if (this.players[4].left < this.balls.right && this.players[4].right > this.balls.left && this.players[4].top < this.balls.bottom && this.players[4].bottom > this.balls.top){
+            this.balls.velocity.x = -(this.balls.velocity.x) + this.ball_speed_increment_paddle_x;
         }
-        if(this.players[2].top < this.balls.bottom && this.players[2].right > this.balls.left && this.players[2].bottom > this.balls.top  && this.players[2].left < this.balls.right
-             || this.players[5].top < this.balls.bottom && this.players[5].left < this.balls.right && this.players[5].bottom > this.balls.top){
-            this.balls.velocity.x = -this.balls.velocity.x;
-            this.balls.velocity.y += this.balls.velocity.y * 0.9 + this.ball_speed_increment_paddle_y;
+
+
+        if (this.players[2].left < this.balls.right && this.players[2].right > this.balls.left && this.players[2].top < this.balls.bottom && this.players[2].bottom > this.balls.top){
+            this.balls.velocity.x = -(this.balls.velocity.x) + this.ball_speed_increment_paddle_x;
+            this.balls.velocity.y += Math.abs(this.balls.velocity.y) * 0.1 + this.ball_speed_increment_paddle_y;
+        }
+        if (this.players[5].left < this.balls.right && this.players[5].right > this.balls.left && this.players[5].top < this.balls.bottom && this.players[5].bottom > this.balls.top){
+            this.balls.velocity.x = -(this.balls.velocity.x) + this.ball_speed_increment_paddle_x;
+            this.balls.velocity.y += Math.abs(this.balls.velocity.y) * 0.1 + this.ball_speed_increment_paddle_y;
         }
     }
     
@@ -260,14 +259,41 @@ class Game {
         }
         if (level == 2){
             if(randomized_number_1 == 0){
-                this.balls.velocity.x = -150;
+                this.balls.velocity.x = -120;
             }
             else{
-                this.balls.velocity.x = 150;
+                this.balls.velocity.x = 120;
             }
-            this.balls.velocity.y = 150;
+            this.balls.velocity.y = 120;
         }
         if (level == 3){
+            if(randomized_number_1 == 0){
+                this.balls.velocity.x = -140;
+            }
+            else{
+                this.balls.velocity.x = 140;
+            }
+            this.balls.velocity.y = 140;
+        }
+        if (level == 4){
+            if(randomized_number_1 == 0){
+                this.balls.velocity.x = -160;
+            }
+            else{
+                this.balls.velocity.x = 160;
+            }
+            this.balls.velocity.y = 160;
+        }
+        if (level == 5){
+            if(randomized_number_1 == 0){
+                this.balls.velocity.x = -180;
+            }
+            else{
+                this.balls.velocity.x = 180;
+            }
+            this.balls.velocity.y = 180;
+        }
+        if (level == 6){
             if(randomized_number_1 == 0){
                 this.balls.velocity.x = -200;
             }
@@ -276,23 +302,41 @@ class Game {
             }
             this.balls.velocity.y = 200;
         }
-        if (level == 4){
+        if (level == 7){
             if(randomized_number_1 == 0){
-                this.balls.velocity.x = -250;
+                this.balls.velocity.x = -220;
             }
             else{
-                this.balls.velocity.x = 250;
+                this.balls.velocity.x = 220;
             }
-            this.balls.velocity.y = 250;
+            this.balls.velocity.y = 220;
         }
-        if (level >= 5){
+        if (level == 8){
             if(randomized_number_1 == 0){
-                this.balls.velocity.x = -300;
+                this.balls.velocity.x = -240;
             }
             else{
-                this.balls.velocity.x = 300;
+                this.balls.velocity.x = 240;
             }
-            this.balls.velocity.y = 300;
+            this.balls.velocity.y = 240;
+        }
+        if (level == 9){
+            if(randomized_number_1 == 0){
+                this.balls.velocity.x = -260;
+            }
+            else{
+                this.balls.velocity.x = 260;
+            }
+            this.balls.velocity.y = 260;
+        }
+        if (level >= 10){
+            if(randomized_number_1 == 0){
+                this.balls.velocity.x = -280;
+            }
+            else{
+                this.balls.velocity.x = 280;
+            }
+            this.balls.velocity.y = 280;
         }
     }
 
@@ -365,6 +409,7 @@ class Game {
                 score_player = 0;
                 score_cpu = 0;
                 level = 1;
+                this.cpu_speed = 0.5;
                 this._context.fillText("Game Over", canvas.width/10*4, canvas.height/10*5);
                 this.flag_run = false;
             }
